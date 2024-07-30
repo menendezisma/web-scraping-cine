@@ -27,7 +27,20 @@ def parse_cinema_data(data, date, country):
     # Procesar los datos
     for line in data.split("\n"):
         if line.startswith("Complejo:"):
+            if horarios:
+                for hora in horarios:
+                    data_rows.append({
+                        "Fecha": date,
+                        "Pais": country,
+                        "Cine": "Multicinema",
+                        "Nombre_cine": complejo.replace(" ", "_"),
+                        "Titulo": titulo.replace(" ", "_"),
+                        "Hora": hora,
+                        "Idioma": idioma,
+                        "Formato": formato
+                    })
             complejo = line.split("Complejo:")[1].strip()
+            horarios = []
         elif line.startswith("Título:"):
             titulo = line.split("Título:")[1].strip()
         elif line.startswith("Clasificación:"):
@@ -51,7 +64,7 @@ def parse_cinema_data(data, date, country):
                     })
             idioma_formato = line.strip().split()
             idioma = idioma_formato[0]
-            formato = idioma_formato[1]
+            formato = idioma_formato[1] if len(idioma_formato) > 1 else ""
             horarios = []
         elif line.strip():
             horarios.extend(line.strip().split())
@@ -71,6 +84,23 @@ def parse_cinema_data(data, date, country):
 
     return data_rows
 
+def combine_time_parts(data_rows):
+    combined_data = []
+    skip_next = False
+
+    for i in range(len(data_rows)):
+        if skip_next:
+            skip_next = False
+            continue
+
+        current_row = data_rows[i]
+        if i + 1 < len(data_rows) and data_rows[i+1]["Hora"] in ["AM", "PM"]:
+            current_row["Hora"] += " " + data_rows[i+1]["Hora"]
+            skip_next = True
+
+        combined_data.append(current_row)
+    
+    return combined_data
 
 
 
@@ -125,20 +155,23 @@ fecha_formato=fecha_datetime.strftime("%m-%d-%Y")
 #variables para almacenar información
 data=[]
 pais="El Salvador"
-print(fecha_formato)
-
+#print(fecha_formato)
+data_info=[]
 info_cinema=driver.find_elements(By.XPATH, '//div[@class="tab-content"]')
 for infos in info_cinema:
-    data_info=infos.text
-    print(infos.text)
-
-    
+    data_info.append(infos.text)
+    #data_info.append(infos.text)
+    #print(infos.text)
+data_info = "\n".join(data_info)
+print(data_info)    
 #pasar los datos
 data_rows = parse_cinema_data(data_info, fecha_formato, pais)
+data_rows = combine_time_parts(data_rows)
 df=pd.DataFrame(data_rows)
 print(df)
 
 driver.quit()
+
 
 
 
