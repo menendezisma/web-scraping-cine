@@ -9,6 +9,18 @@ import locale
 import pandas as pd
 from datetime import datetime
 
+def conversion_fecha(fecha):
+    locale.setlocale(locale.LC_TIME, 'Spanish_Spain.1252')
+    date_text=fecha.text[22:]
+    date_text=date_text.split()
+    if(date_text[0]=="Miercoles"):
+        date_text[0]="Miércoles"
+    elif date_text[0]=="Sabado":
+        date_text[0]="Sábado"
+    date_text=" ".join(date_text)
+    fecha_datetime=datetime.strptime(date_text, "%A %d %B %Y")
+    fecha_formato=fecha_datetime.strftime("%m-%d-%Y")
+    return fecha_formato
 
 def parse_cinema_data(data, date, country):
     # Inicializar variables para almacenar datos
@@ -64,23 +76,24 @@ def parse_cinema_data(data, date, country):
                     })
             idioma_formato = line.strip().split()
             idioma = idioma_formato[0]
-            formato = idioma_formato[1] if len(idioma_formato) > 1 else ""
+            formato = "".join(idioma_formato[1:]) if len(idioma_formato) > 1 else ""
             horarios = []
         elif line.strip():
             horarios.extend(line.strip().split())
 
     # Añadir la última tanda de horarios
-    for hora in horarios:
-        data_rows.append({
-            "Fecha": date,
-            "Pais": country,
-            "Cine": "Multicinema",
-            "Nombre_cine": complejo.replace(" ", "_"),
-            "Titulo": titulo.replace(" ", "_"),
-            "Hora": hora,
-            "Idioma": idioma,
-            "Formato": formato
-        })
+    if horarios:
+        for hora in horarios:
+            data_rows.append({
+                "Fecha": date,
+                "Pais": country,
+                "Cine": "Multicinema",
+                "Nombre_cine": complejo.replace(" ", "_"),
+                "Titulo": titulo.replace(" ", "_"),
+                "Hora": hora,
+                "Idioma": idioma,
+                "Formato": formato
+            })
 
     return data_rows
 
@@ -147,11 +160,7 @@ time.sleep(2)
 #print(name_cinema.text[9:])
 # Cierra el navegador
 date_cinema=driver.find_element(By.XPATH, '/html/body/div[1]/div/div/h3/center')
-#print(date_cinema.text[22:])
-locale.setlocale(locale.LC_TIME, 'Spanish_Spain.1252')
-date_text=date_cinema.text[22:]
-fecha_datetime=datetime.strptime(date_text, "%A %d %B %Y")
-fecha_formato=fecha_datetime.strftime("%m-%d-%Y")
+
 #variables para almacenar información
 data=[]
 pais="El Salvador"
@@ -163,13 +172,15 @@ for infos in info_cinema:
     #data_info.append(infos.text)
     #print(infos.text)
 data_info = "\n".join(data_info)
-print(data_info)    
+#print(data_info)    
 #pasar los datos
+fecha_formato=conversion_fecha(date_cinema)
 data_rows = parse_cinema_data(data_info, fecha_formato, pais)
 data_rows = combine_time_parts(data_rows)
 df=pd.DataFrame(data_rows)
+#df=df.to_string(index=False)
 print(df)
-
+df.to_excel('Multicinema.xlsx', index=False)
 driver.quit()
 
 
