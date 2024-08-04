@@ -1,6 +1,6 @@
 from selenium import webdriver
-from selenium.webdriver.chrome.service import Service
-from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.edge.service import Service
+from selenium.webdriver.edge.options import Options
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support.ui import Select
@@ -116,16 +116,15 @@ def combine_time_parts(data_rows):
     return combined_data
 
 
-
-
-#options = webdriver.ChromeOptions()
+#Crear instancia de Options
 options = Options()
+#Abrir la ventana del navegador en tamaño grande.
 options.add_argument('--start-maximized')
 #options.add_argument()
 
-driver_path = 'C:\\Users\\Usuario\\Desktop\\chromeDriver\\chromedriver-win64\\chromedriver127.exe'
+driver_path = 'C:\\Users\\Usuario\\Desktop\\EdgeDriver\\msedgedriver.exe'
 service=Service(driver_path)
-driver = webdriver.Chrome(service=service, options=options)
+driver = webdriver.Edge(service=service, options=options)
 driver.get('https://multicinema.com.sv/') 
 time.sleep(2)
 cartelera_button = driver.find_element(By.LINK_TEXT, "Cartelera")
@@ -180,7 +179,7 @@ data_rows = combine_time_parts(data_rows)
 df=pd.DataFrame(data_rows)
 #df=df.to_string(index=False)
 print(df)
-df.to_excel('Multicinema.xlsx', index=False)
+df.to_excel('Multicinema2.xlsx', index=False)
 driver.quit()
 
 
