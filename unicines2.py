@@ -98,8 +98,6 @@ if __name__ == '__main__':
         # Navegar al enlace
         driver.get(url)
         
-        # Realizar cualquier acción que necesites en la página destino
-        # (ejemplo: extraer información, interactuar con elementos, etc.)
         #obtener el nombre del cine
         nombre_cine_completo=driver.find_elements(By.XPATH, '//h1[@class="nomargin_top"]')
         #obtener la información para cada pelicula
