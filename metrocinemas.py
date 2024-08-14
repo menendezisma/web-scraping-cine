@@ -5,6 +5,7 @@ from selenium.webdriver.common.by import By
 import time
 import pandas as pd
 from datetime import datetime
+import os
 
 import re
 
@@ -16,9 +17,12 @@ def obtener_horarios(peliculas):
         # Buscamos patrones de horarios más flexibles
         patron = r'\d{1,2}:\d{1,2}'
         match = re.search(patron, peli)
+
         #Si se encuentra una coincidencia, se agrega el horario a la lista
         if match:
             horarios.append(match.group())
+
+    print(horarios)
     return horarios
  
 
@@ -56,8 +60,11 @@ def obtener_formato(pelicula):
             elif "3D" in parte:
                 formato.append("3D")
                 continue
-    formato.pop(0)
-    formato.pop(0)
+    if len(formato)>2:
+        formato.pop(0)
+        formato.pop(0)
+    elif len(formato)<=2:
+        formato.pop(0)
     return formato
 
 #funcion que sirve para obtener la fecha actual.
@@ -107,31 +114,62 @@ if __name__=='__main__':
             time.sleep(2)
         else:
             driver.quit()
-          
+    print()      
     peliculas_filas = []        
     pais="Honduras"
     cine="Metrocinemas"
     fecha=obtener_fecha_sistema()
     
     for peli_individual in info_cartelera:
+        print(peli_individual[0])
         idiomas=obtener_idioma(peli_individual)
         horarios=obtener_horarios(peli_individual)
         formatos=obtener_formato(peli_individual) 
+        
+        if horarios == []:
+            #print(type(horarios))
+            cantidad=len(formatos)
+            #print(cantidad)
+            horarios.append("No horario")
+        
+
+        if "2D VIP DOB" in peli_individual[0] or "3D VIP DOB" in peli_individual[0]:
+            nombre_pelicula=peli_individual[0][11:]
+        elif "2D DOB" in peli_individual[0] or "2D VIP" in peli_individual[0] or "3D DOB" in peli_individual[0]:
+            nombre_pelicula=peli_individual[0][7:]
+        elif "2D SVIP DOB" in peli_individual[0]:
+            nombre_pelicula=peli_individual[0][12:]
+        elif "2D" in peli_individual[0]:
+            nombre_pelicula=peli_individual[0][3:]
+        else:
+            nombre_pelicula=peli_individual[0][:]
+            
         for horario, formato in zip(horarios, formatos):
             peliculas_filas.append({
                 "Fecha": fecha,
                 "Pais":pais,
                 "Cine":cine,
                 "Nombre cine":peli_individual[-1],
-                "Titulo":peli_individual[1],
+                "Titulo":nombre_pelicula,
                 "Hora":horario,
                 "Idioma":idiomas[0],
                 "Formato":formato
             })
     
+    print(peliculas_filas)
     df=pd.DataFrame(peliculas_filas)
     print(df)
-    df.to_excel('metrocinemas.xlsx', index=False)
+    #Crear la ruta completa al archivo de Excel
+    ruta_carpeta = "results"
+    hora=datetime.now()
+    nombre_archivo="metrocinemas "+fecha+" "+str(hora.strftime("%H-%M-%S"))+".xlsx"
+    ruta_archivo = os.path.join(ruta_carpeta, nombre_archivo)
+  
+    #Crear la carpeta si no existe
+    os.makedirs(ruta_carpeta, exist_ok=True)
+    df.to_excel(ruta_archivo, index=False)
+    
+    print("Información de peliculas guardada en carpeta results en el archivo de excel "+nombre_archivo)
     # Cerrar el navegador
     driver.quit() 
     #print(len(info_cartelera))    
