@@ -6,6 +6,7 @@ import time
 import locale
 import pandas as pd
 from datetime import datetime
+import os
 
 #funcion que servira para convertir la fecha al formato de mes-dia-año.
 def conversion_de_fecha(date_movies):
@@ -124,9 +125,19 @@ if __name__=='__main__':
             peliculas_filas.append(diccionario)
 
   #print(peliculas_filas)
-  df=pd.DataFrame(peliculas_filas)
-  print(df)
-  df.to_excel('multicinema_1.xlsx', index=False)
+  peliculas_cartelera_completa=pd.DataFrame(peliculas_filas)
+  print(peliculas_cartelera_completa)
+  #Crear la ruta completa al archivo de Excel
+  ruta_carpeta = "results"
+  hora=datetime.now()
+  nombre_archivo="multicinema "+fecha+" "+str(hora.strftime("%H-%M-%S"))+".xlsx"
+  ruta_archivo = os.path.join(ruta_carpeta, nombre_archivo)
+  
+  #Crear la carpeta si no existe
+  os.makedirs(ruta_carpeta, exist_ok=True)
+  
+  peliculas_cartelera_completa.to_excel(ruta_archivo, index=False)
+  print("Información de peliculas guardada en carpeta results en el archivo de excel "+nombre_archivo)
   # Cerrar el navegador
   driver.quit()
 
