@@ -8,6 +8,7 @@ import time
 import locale
 import pandas as pd
 import re
+import os
 from datetime import datetime
 
 def formatear_fecha(fecha, anio):
@@ -76,7 +77,7 @@ if __name__ == '__main__':
     #Abrir la ventana del navegador en tamaño grande.
     options.add_argument('--start-maximized')
     #indicar la ruta local en la que se encuentra el driver
-    driver_path = 'C:\\Users\\Usuario\\Desktop\\EdgeDriver\\msedgedriver.exe'
+    driver_path = 'C:/Users/Usuario/Desktop/EdgeDriver/msedgedriver.exe'
     service=Service(driver_path)
     driver = webdriver.Edge(service=service, options=options)
     driver.get('https://unicines.com/cartelera.php') 
@@ -112,7 +113,7 @@ if __name__ == '__main__':
         
         #se obtiene las peliculas en cartelera para cada cine y se le agrega el nombre del cine, la información se almacena en una lista.     
         for infos in info_cinema:
-            info_cartelera=infos.text+ "\n" + nombre_cine[13:]
+            info_cartelera=infos.text+ "\n" + nombre_cine[22:]
             data_info.append(info_cartelera)
         
         #se obtiene la fecha de la cartelera
@@ -170,10 +171,20 @@ if __name__ == '__main__':
 
     #creamos el dataframe con la lista que contiene un diccionario por cada pelicula.
     df=pd.DataFrame(data_rows)
+    #Crear la ruta completa al archivo de Excel
+    ruta_carpeta = "results"
+    hora=datetime.now()
+    nombre_archivo="unicines "+fecha_formateada+" "+str(hora.strftime("%H-%M-%S"))+".xlsx"
+    ruta_archivo = os.path.join(ruta_carpeta, nombre_archivo)
+    
+    #Crear la carpeta si no existe
+    os.makedirs(ruta_carpeta, exist_ok=True)
+    df.to_excel(ruta_archivo, index=False)
     #print(df)
     #se exporta el dataframe a archivo excel, se indica que no se requieren los indices del dataframe.
-    df.to_excel('unicines.xlsx', index=False)
+    df.to_excel(ruta_archivo, index=False)
 
+    print("Información de peliculas guardada en carpeta results en el archivo de excel "+nombre_archivo)
     # Cerrar el navegador
     driver.quit()
     
